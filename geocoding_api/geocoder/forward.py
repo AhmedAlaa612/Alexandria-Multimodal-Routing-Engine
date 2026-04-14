@@ -125,7 +125,7 @@ def geocode(
     user_lng: Optional[float] = None,
 ) -> list[dict]:
     """
-    Forward geocode an address string using Google Maps scraping.
+    Forward geocode an address string using Google Maps
 
     Parameters
     ----------
