@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+package routing;
+
+// ── Service ──────────────────────────────────────────────────────────────────
+
+service RoutingService {
+  rpc FindJourneys (JourneyRequest)  returns (JourneyResponse);
+  rpc HealthCheck  (Empty)           returns (HealthResponse);
+}
+
+// ── Messages ─────────────────────────────────────────────────────────────────
+
+message Empty {}
+
+message FilterBlock {
+  repeated string include       = 1;
+  repeated string exclude       = 2;
+  string          include_match = 3;  // "any" or "all"
+}
+
+message Filters {
+  FilterBlock modes        = 1;
+  FilterBlock main_streets = 2;
+}
+
+message JourneyRequest {
+  double  start_lat      = 1;
+  double  start_lon      = 2;
+  double  end_lat        = 3;
+  double  end_lon        = 4;
+  int32   max_transfers  = 5;
+  int32   walking_cutoff = 6;
+  string  priority       = 7;
+  int32   top_k          = 8;
+  Filters filters        = 9;
+  map<string, double> weights = 10;
+}
+
+message StopInfo {
+  string          stop_id = 1;
+  string          name    = 2;
+  string          name_ar = 3;
+  repeated double coord   = 4;
+}
+
+message Leg {
+  string type                     = 1;
+
+  // Walk leg fields
+  int32  distance_meters          = 2;
+  int32  duration_minutes         = 3;
+  string polyline                 = 4;
+
+  // Trip leg fields
+  string          trip_id              = 5;
+  repeated string trip_ids             = 6;
+  string          mode_en              = 7;
+  string          mode_ar              = 8;
+  string          route_short_name     = 9;
+  string          route_short_name_ar  = 10;
+  string          headsign             = 11;
+  string          headsign_ar          = 12;
+  double          fare                 = 13;
+  StopInfo        from_stop            = 14;
+  StopInfo        to_stop              = 15;
+
+  // Transfer leg fields
+  string from_trip_id              = 16;
+  string to_trip_id                = 17;
+  string from_trip_name            = 18;
+  string from_trip_name_ar         = 19;
+  string to_trip_name              = 20;
+  string to_trip_name_ar           = 21;
+  string end_stop_id               = 22;
+  int32  walking_distance_meters   = 23;
+}
+
+message JourneySummary {
+  int32           total_time_minutes      = 1;
+  int32           walking_distance_meters = 2;
+  int32           transit_distance_meters = 3;
+  int32           total_distance_meters   = 4;
+  int32           transfers               = 5;
+  double          cost                    = 6;
+  repeated string modes_en                = 7;
+  repeated string modes_ar                = 8;
+  repeated string main_streets_en         = 9;
+  repeated string main_streets_ar         = 10;
+}
+
+message Journey {
+  int32           id               = 1;
+  string          text_summary     = 2;
+  string          text_summary_en  = 3;
+  JourneySummary  summary          = 4;
+  repeated Leg    legs             = 5;
+  repeated string labels           = 6;
+  repeated string labels_ar        = 7;
+  string          recommended_for  = 8;
+}
+
+message JourneyResponse {
+  string                  geometry_encoding  = 1;
+  string                  selected_priority  = 2;
+  map<string, double>     weights_used       = 3;
+  int32                   num_journeys       = 4;
+  repeated Journey        journeys           = 5;
+  int32                   start_trips_found  = 6;
+  int32                   end_trips_found    = 7;
+  int32                   total_routes_found = 8;
+  int32                   total_after_dedup  = 9;
+  string                  error              = 10;
+}
+
+message HealthResponse {
+  string status           = 1;
+  int32  graph_nodes      = 2;
+  int32  graph_edges      = 3;
+  int32  trip_graph_edges = 4;
+  int32  trips_loaded     = 5;
+}

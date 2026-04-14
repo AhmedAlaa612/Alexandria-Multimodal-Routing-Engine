@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package db_tools;
+
+// ── Service ──────────────────────────────────────────────────────────────────
+
+service DbToolsService {
+  rpc NearbyTrips (NearbyTripsRequest)  returns (NearbyTripsResponse);
+  rpc HealthCheck (Empty)               returns (HealthResponse);
+}
+
+// ── Messages ─────────────────────────────────────────────────────────────────
+
+message Empty {}
+
+message NearbyTripsRequest {
+  double lat      = 1;
+  double lon      = 2;
+  double radius_m = 3;
+  bool   starts   = 4;
+  int32  epsg     = 5;
+}
+
+message NearbyTripResult {
+  string trip_id              = 1;
+  string route_id             = 2;
+  string trip_headsign        = 3;
+  string trip_headsign_ar     = 4;
+  int32  direction_id         = 5;
+  string route_short_name     = 6;
+  string route_short_name_ar  = 7;
+  string route_name           = 8;
+  string route_name_ar        = 9;
+  double distance_m           = 10;
+  string closest_stop_id      = 11;
+  string closest_stop_name    = 12;
+  string closest_stop_name_ar = 13;
+  double closest_stop_lat     = 14;
+  double closest_stop_lon     = 15;
+  int32  closest_stop_sequence = 16;
+}
+
+message NearbyTripsResponse {
+  double                    lat      = 1;
+  double                    lon      = 2;
+  double                    radius_m = 3;
+  bool                      starts   = 4;
+  int32                     epsg     = 5;
+  int32                     count    = 6;
+  repeated NearbyTripResult trips    = 7;
+}
+
+message HealthResponse {
+  string status       = 1;
+  bool   db_connected = 2;
+}

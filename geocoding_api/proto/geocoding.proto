@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package geocoding;
+
+// ── Service ──────────────────────────────────────────────────────────────────
+
+service GeocodingService {
+  rpc Geocode     (GeocodeRequest) returns (GeocodeResponse);
+  rpc HealthCheck (Empty)          returns (HealthResponse);
+}
+
+// ── Messages ─────────────────────────────────────────────────────────────────
+
+message Empty {}
+
+message GeocodeRequest {
+  string address  = 1;
+  string language = 2;
+  bool   bias     = 3;
+  double user_lat = 4;  // 0 = not provided
+  double user_lng = 5;
+}
+
+message GeocodeResult {
+  double latitude          = 1;
+  double longitude         = 2;
+  string formatted_address = 3;
+}
+
+message GeocodeResponse {
+  bool                    success  = 1;
+  string                  query    = 2;
+  string                  language = 3;
+  bool                    bias     = 4;
+  int32                   count    = 5;
+  repeated GeocodeResult  results  = 6;
+  string                  error    = 7;
+}
+
+message HealthResponse {
+  string status = 1;
+}

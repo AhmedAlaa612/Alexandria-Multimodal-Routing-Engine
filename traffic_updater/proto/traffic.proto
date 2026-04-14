@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package traffic;
+
+// ── Service ──────────────────────────────────────────────────────────────────
+
+service TrafficUpdateService {
+  rpc TriggerUpdate  (TriggerRequest)       returns (UpdateResponse);
+  rpc GetStatus      (Empty)                returns (StatusResponse);
+  rpc UpdateTrip     (UpdateTripRequest)     returns (UpdateResponse);
+  rpc StreetTraffic  (StreetTrafficRequest)  returns (StreetTrafficResponse);
+  rpc ListStreets    (Empty)                 returns (StreetListResponse);
+}
+
+// ── Messages ─────────────────────────────────────────────────────────────────
+
+message Empty {}
+
+message TriggerRequest {
+  repeated string trip_ids           = 1;  // empty = all trips
+  bool            notify_routing_api = 2;
+}
+
+message UpdateTripRequest {
+  string trip_id            = 1;
+  bool   notify_routing_api = 2;
+}
+
+message UpdateResponse {
+  string status        = 1;
+  int32  trips_updated = 2;
+  int32  trips_failed  = 3;
+  string message       = 4;
+}
+
+message StatusResponse {
+  string status        = 1;
+  string last_update   = 2;
+  int32  trips_in_data = 3;
+  bool   is_running    = 4;
+}
+
+// ── Street traffic ───────────────────────────────────────────────────────────
+
+message StreetTrafficRequest {
+  string name           = 1;
+  string language       = 2;
+  int32  max_waypoints  = 3;
+}
+
+message StreetTrafficLeg {
+  int32  distance_m        = 1;
+  string distance_text     = 2;
+  int32  duration_seconds  = 3;
+  string duration_text     = 4;
+}
+
+message StreetTrafficRoute {
+  string label             = 1;
+  int32  distance_m        = 2;
+  string distance_text     = 3;
+  int32  duration_seconds  = 4;
+  string duration_text     = 5;
+}
+
+message StreetTrafficResponse {
+  string                       street             = 1;
+  string                       street_ar          = 2;
+  int32                        segments           = 3;
+  int32                        waypoints_used     = 4;
+  double                       total_distance_km  = 5;
+  double                       total_duration_min = 6;
+  repeated StreetTrafficLeg    legs               = 7;
+  repeated StreetTrafficRoute  routes             = 8;
+  string                       error              = 9;
+}
+
+message StreetInfo {
+  string          name             = 1;
+  string          name_ar          = 2;
+  repeated string aliases          = 3;
+  int32           segments         = 4;
+  double          total_length_km  = 5;
+}
+
+message StreetListResponse {
+  int32               count   = 1;
+  repeated StreetInfo streets = 2;
+}
+
