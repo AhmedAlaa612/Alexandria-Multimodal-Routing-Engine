@@ -1,8 +1,5 @@
 """
 Forward geocoding: address -> list of (lat, lon, formatted_address).
-
-Ported from geocoding-main/lib/nodejs-geocoding/src/index.ts encode()
-and geocoding-main/src/geocode.ts geocodeWithBias().
 """
 from __future__ import annotations
 
