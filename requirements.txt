@@ -11,3 +11,4 @@ grpcio>=1.62,<2.0
 grpcio-reflection>=1.62,<2.0
 protobuf>=6.31.1,<7.0
 psycopg2-binary>=2.9,<3.0
+scikit-learn>=1.4,<2.0
