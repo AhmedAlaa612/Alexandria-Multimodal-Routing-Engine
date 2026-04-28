@@ -15,6 +15,7 @@ from routing_api.ranking.ranker import rank_routing_results
 from routing_api.presentation.enricher import enrich_journey_results
 from routing_api.presentation.labels import add_journey_labels
 from routing_api.filters.exclusions import build_excluded_trips
+from routing_api.filters.inclusions import apply_include_filters
 
 
 def find_journeys(
@@ -36,7 +37,10 @@ def find_journeys(
 
     Pipeline steps:
         validate → nearest nodes → walking check → explore_trips (start+end)
-        → build excluded_trips → pareto BFS → dedup → rank → enrich → label
+        → build excluded_trips (exclude filters, pre-BFS)
+        → pareto BFS
+        → apply_include_filters (include filters, post-BFS, pre-dedup — full pool)
+        → dedup → rank → enrich → label
     """
     ranking_weights, resolved_priority = resolve_ranking_weights(
         priority=priority, custom_weights=weights,
@@ -93,6 +97,8 @@ def find_journeys(
         else:
             filters_dict = filters
 
+    # ── Pre-BFS: exclude filters only ────────────────────────────────────────
+    # Drops individual trips that should never appear (exclude-side only).
     excluded_trips = build_excluded_trips(lookups, filters=filters_dict)
     routing_results = find_journeys_pareto(
         trip_graph, start_trips, target_trips, max_transfers, excluded_trips,
@@ -100,6 +106,16 @@ def find_journeys(
     if not routing_results:
         return early_return(
             None if walking_journey else "No valid journeys found between the locations"
+        )
+
+    # ── Post-BFS, pre-dedup: include filters ─────────────────────────────────
+    # Checks the full pool of candidate journeys so that include filters can't
+    # silently starve the top_k result set. A journey satisfies an include if
+    # *any* of its legs (including transfers) uses the requested mode/street.
+    routing_results = apply_include_filters(routing_results, filters_dict, lookups)
+    if not routing_results:
+        return early_return(
+            None if walking_journey else "No journeys matched the requested filters"
         )
 
     deduped_results = deduplicate_routing_results(routing_results)
