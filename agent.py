@@ -58,6 +58,10 @@ class AlOstaAgent:
         print(f"[Executor] running {len(plan)} step(s)")
         self.trip_state.last_intent = self.trip_state.infer_intent(plan)
         tool_results = self._execute_plan(plan)
+        abort_message = next((item.get("abort_message") for item in tool_results if isinstance(item, dict) and item.get("abort_message")), None)
+        if abort_message:
+            self.memory.add_assistant_message(abort_message)
+            return abort_message
         if tool_results:
             self._last_tool_output = tool_results
 
@@ -150,6 +154,20 @@ class AlOstaAgent:
                 })
                 memory[step_name] = result
                 self.tool_log.log_tool_call(self.memory.current_turn, tool_name, resolved_args, result)
+
+                if tool_name == "geocode_location" and isinstance(result, dict) and result.get("error"):
+                    abort_message = (
+                        "معلش، ماقدرتش أحدد المكان ده بدقة. "
+                        "ابعت الاسم الكامل أو علامة معروفة أقرب، وأنا أكمل لك الطريق."
+                    )
+                    results.append({
+                        "step": f"abort_after_{step_name}",
+                        "tool": tool_name,
+                        "result": {"error": result.get("error"), "abort_message": abort_message},
+                        "abort_message": abort_message,
+                    })
+                    print(f"[Executor] step {index} ({step_name}) aborted after geocode failure")
+                    break
             except Exception as exc:
                 error_result = {"error": str(exc)}
                 results.append({
