@@ -142,6 +142,22 @@ class AlOstaAgent:
 
             try:
                 resolved_args = self._resolve_value(args, memory)
+                validation_error = self._validate_resolved_args(tool_name, resolved_args)
+                if validation_error:
+                    error_result = {"error": validation_error}
+                    results.append({
+                        "step": step_name,
+                        "tool": tool_name,
+                        "raw_args": args,
+                        "resolved_args": resolved_args,
+                        "result": error_result,
+                    })
+                    memory[step_name] = error_result
+                    self.tool_log.log_tool_call(self.memory.current_turn, tool_name, resolved_args, error_result)
+                    print(f"[Executor] step {index} ({step_name}) aborted before execution: {validation_error}")
+                    if tool_name in {"geocode_location", "get_routes", "db_tools"}:
+                        break
+                    continue
                 print(f"[Executor] step {index} ({step_name}) calling {tool_name} with {json.dumps(resolved_args, ensure_ascii=False)}")
                 result = self._execute_tool(tool_name, resolved_args)
                 print(f"[Executor] step {index} result: {result}")
@@ -383,6 +399,36 @@ class AlOstaAgent:
             return {key: self._resolve_value(item, memory) for key, item in value.items()}
 
         return value
+
+    def _validate_resolved_args(self, tool_name, args):
+        if not isinstance(args, dict):
+            return f"Resolved args for {tool_name} are invalid"
+
+        if tool_name == "geocode_location":
+            place_name = args.get("place_name")
+            if not isinstance(place_name, str) or not place_name.strip():
+                return "Geocoding needs a valid place_name, but the planner reference was unresolved."
+            return None
+
+        if tool_name == "get_routes":
+            required_coords = ["start_lat", "start_lon", "end_lat", "end_lon"]
+            missing = [name for name in required_coords if not isinstance(args.get(name), (int, float))]
+            if missing:
+                return f"Route planning needs valid numeric coordinates, but these fields were unresolved or invalid: {', '.join(missing)}"
+            return None
+
+        if tool_name == "db_tools":
+            if not isinstance(args.get("lat"), (int, float)) or not isinstance(args.get("lon"), (int, float)):
+                return "Nearby-trip lookup needs valid numeric lat/lon, but the planner reference was unresolved."
+            return None
+
+        if tool_name == "check_traffic":
+            street_name = args.get("street_name")
+            if not isinstance(street_name, str) or not street_name.strip():
+                return "Traffic checks need a valid street_name."
+            return None
+
+        return None
 
     def _execute_tool(self, tool_name, args):
         if tool_name == "geocode_location":
