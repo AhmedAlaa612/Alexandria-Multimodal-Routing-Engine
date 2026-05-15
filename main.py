@@ -5,14 +5,14 @@ from agent import AlOstaAgent
 def main():
     # 1. Load environment variables from .env file
     load_dotenv()
-    CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
     
-    if not CEREBRAS_API_KEY:
-        print("Error: Please specify your CEREBRAS_API_KEY in the .env file.")
+    if not GEMINI_API_KEY:
+        print("Error: Please specify your GEMINI_API_KEY in the .env file.")
         return
     
     # 2. Create the Agent
-    agent = AlOstaAgent(CEREBRAS_API_KEY)
+    agent = AlOstaAgent(GEMINI_API_KEY)
     
     print("--- Al-Osta is ready to help you! (Type 'exit' or 'quit' to close) ---")
     
