@@ -1,0 +1,12 @@
+from .check_traffic import TOOL_SCHEMA as CHECK_TRAFFIC_SCHEMA
+from .db_tools import TOOL_SCHEMA as DB_TOOLS_SCHEMA
+from .geocode_location import TOOL_SCHEMA as GEOCODE_LOCATION_SCHEMA
+from .get_routes import TOOL_SCHEMA as GET_ROUTES_SCHEMA
+
+
+AVAILABLE_TOOLS_SCHEMA = [
+    GEOCODE_LOCATION_SCHEMA,
+    GET_ROUTES_SCHEMA,
+    DB_TOOLS_SCHEMA,
+    CHECK_TRAFFIC_SCHEMA,
+]
